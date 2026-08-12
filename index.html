@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Ponte até o Meu Coração</title>
+<!-- Importação das fontes externas via Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ---------- VARIÁVEIS GLOBAIS ---------- */
+  :root{
+    --cream: #fdf5ee;
+    --cream-deep: #f7ebe0;
+    --rose-soft: #e7b2b6;
+    --rose-deep: #c9184a;
+    --rose-mid: #d1495b;
+    --plum: #4a2c3d;
+    --gold: #c9a15c;
+    --river: #a9c9d6;
+    --river-deep: #7fa8bb;
+    --shadow: rgba(74,44,61,0.14);
+  }
+
+  /* Reset básico de margens e box model */
+  *{box-sizing:border-box; margin:0; padding:0;}
+
+  /* ---------- ESTILOS GERAIS DO CORPO ---------- */
+  body{
+    font-family:'Nunito Sans', sans-serif;
+    /* Fundo com degradê radial e cor de base */
+    background:
+      radial-gradient(circle at 15% 10%, #fff 0%, transparent 45%),
+      radial-gradient(circle at 90% 85%, #ffe9e9 0%, transparent 40%),
+      var(--cream);
+    color:var(--plum);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:32px 18px 60px;
+    overflow-x:hidden;
+  }
+
+  /* Subtítulo superior (estilo kicker) */
+  .eyebrow{
+    font-size:0.72rem;
+    letter-spacing:0.32em;
+    text-transform:uppercase;
+    color:var(--rose-mid);
+    font-weight:700;
+    margin-bottom:6px;
+  }
+
+  /* Título principal */
+  h1{
+    font-family:'Cormorant Garamond', serif;
+    font-weight:600;
+    font-style:italic;
+    font-size:clamp(1.9rem, 4vw, 2.7rem);
+    text-align:center;
+    color:var(--rose-deep);
+    max-width:640px;
+    line-height:1.2;
+  }
+
+  /* Subtítulo descritivo */
+  .subtitle{
+    max-width:520px;
+    text-align:center;
+    margin-top:10px;
+    color:#7a5a63;
+    font-size:0.98rem;
+    line-height:1.5;
+  }
+
+  /* ---------- BARRA DE STATUS ---------- */
+  .status-bar{
+    display:flex;
+    gap:28px;
+    margin:26px 0 8px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  .status-chip{
+    background:#fff;
+    border:1px solid #f0d9d9;
+    border-radius:999px;
+    padding:8px 20px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:0.85rem;
+    font-weight:700;
+    color:var(--plum);
+    box-shadow:0 3px 10px var(--shadow);
+  }
+  .status-chip span.label{
+    font-weight:400;
+    color:#9a7b83;
+    font-size:0.75rem;
+  }
+  .status-chip .dot{color:var(--rose-deep); font-size:1rem;}
+
+  /* ---------- LAYOUT CONTAINER ---------- */
+  .container{
+    display:flex;
+    flex-wrap:wrap;
+    gap:44px;
+    justify-content:center;
+    align-items:flex-start;
+    max-width:1080px;
+    width:100%;
+    margin-top:20px;
+  }
+
+  /* Painéis decorativos onde os elementos ficam */
+  .panel{
+    background:#fff;
+    border-radius:22px;
+    padding:26px;
+    box-shadow:0 14px 34px var(--shadow);
+  }
+
+  .panel-label{
+    font-family:'Cormorant Garamond', serif;
+    font-style:italic;
+    font-weight:600;
+    font-size:1.15rem;
+    color:var(--rose-mid);
+    text-align:center;
+    margin-bottom:16px;
+  }
+
+  /* ---------- JOGO DA MEMÓRIA ---------- */
+  .memory-game{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:12px;
+    perspective:1200px; /* Cria profundidade para a animação 3D do flip */
+  }
+
+  /* Cartas e efeito 3D */
+  .card{
+    width:78px;
+    height:78px;
+    position:relative;
+    transform-style:preserve-3d;
+    transition:transform 0.5s cubic-bezier(.4,.2,.2,1);
+    cursor:pointer;
+    border-radius:12px;
+  }
+  .card:focus-visible{ outline:3px solid var(--gold); outline-offset:3px; }
+
+  /* Estados da Carta: Virada, Combinada e Erro (Shake) */
+  .card.flip{ transform:rotateY(180deg); }
+  .card.matched{ cursor:default; }
+  .card.matched .front{ box-shadow:0 0 0 3px var(--gold) inset; }
+  .card.hint{ animation:cardShake 0.4s; }
+  @keyframes cardShake{
+    0%,100%{transform:translateX(0) rotateY(180deg);}
+    25%{transform:translateX(-4px) rotateY(180deg);}
+    75%{transform:translateX(4px) rotateY(180deg);}
+  }
+
+  /* Lados da Carta (Frente e Verso) */
+  .front,.back{
+    width:100%; height:100%;
+    position:absolute;
+    backface-visibility:hidden;
+    border-radius:12px;
+    border:3px solid #fff;
+  }
+
+  /* Verso da carta (virada para baixo) */
+  .back{
+    background:var(--rose-soft);
+    background-image:radial-gradient(#fff 14%, transparent 15%);
+    background-size:14px 14px;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 4px 10px var(--shadow);
+  }
+  .back::after{ content:'♥'; font-size:1.5rem; color:#fff; }
+
+  /* Frente da carta (revelada) */
+  .front{ transform:rotateY(180deg); box-shadow:0 4px 10px var(--shadow);}
+
+  /* Texturas CSS das cartas/pisos */
+  .texture-wood{
+    background-color:#e5d3bf;
+    background-image:linear-gradient(90deg, rgba(0,0,0,0.08) 1px, transparent 1px),
+      linear-gradient(0deg, rgba(160,120,85,0.15) 50%, transparent 50%);
+    background-size:40px 100%, 100% 11px;
+  }
+  .texture-marble{
+    background:#f0ede6;
+    background-image:radial-gradient(ellipse at 20% 20%, rgba(180,170,160,0.4) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 70%, rgba(160,150,140,0.3) 0%, transparent 60%);
+  }
+  .texture-mosaic{
+    background-color:#e8d0b5;
+    background-image:radial-gradient(#a35d4d 20%, transparent 20%), radial-gradient(#5a8a80 20%, transparent 20%);
+    background-size:26px 26px;
+    background-position:0 0, 13px 13px;
+  }
+  .texture-tile{
+    background-color:#e0ece4;
+    background-image:linear-gradient(45deg,#79a3b1 25%, transparent 25%), linear-gradient(-45deg,#79a3b1 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%,#79a3b1 75%), linear-gradient(-45deg, transparent 75%,#79a3b1 75%);
+    background-size:18px 18px;
+  }
+  .texture-granite{
+    background:#d8c3b1;
+    background-image:radial-gradient(#8c6d58 15%, transparent 16%), radial-gradient(#f4ebd9 20%, transparent 21%), radial-gradient(#6e4a36 10%, transparent 11%);
+    background-size:22px 22px, 16px 16px, 26px 26px;
+    background-position:0 0, 7px 7px, 11px 4px;
+  }
+  .texture-brick{
+    background-color:#c86d51;
+    background-image:linear-gradient(335deg, rgba(255,255,255,0.2) 6px, transparent 6px), linear-gradient(155deg, rgba(0,0,0,0.1) 6px, transparent 6px);
+    background-size:26px 16px;
+  }
+
+  /* ---------- CENÁRIO DA PONTE ---------- */
+  .bridge-panel{ width:420px; max-width:100%; }
+
+  .bridge-scene{
+    position:relative;
+    height:280px;
+    border-radius:16px;
+    overflow:hidden;
+    background:linear-gradient(#eaf3fb 0%, #eaf3fb 55%, var(--river) 55%, var(--river-deep) 100%);
+  }
+
+  /* Animação da correnteza do rio */
+  .river-flow{
+    position:absolute;
+    left:0; right:0; top:55%; height:45%;
+    background-image:repeating-linear-gradient(100deg, rgba(255,255,255,0.18) 0 10px, transparent 10px 26px);
+    animation:flow 4s linear infinite;
+  }
+  @keyframes flow{ from{background-position-x:0;} to{background-position-x:200px;} }
+
+  /* Penhascos laterais */
+  .cliff{
+    position:absolute;
+    bottom:0;
+    width:78px;
+    height:150px;
+    background:#e9dcc9;
+    box-shadow:inset -6px 0 10px rgba(0,0,0,0.06);
+  }
+  .cliff-left{ left:0; border-radius:0 40px 0 0; }
+  .cliff-right{ right:0; border-radius:40px 0 0 0; }
+  .cliff::before{
+    content:'';
+    position:absolute; top:-14px; left:0; right:0; height:20px;
+    background:#8fb87a;
+    border-radius:50% 50% 0 0 / 100% 100% 0 0;
+  }
+
+  /* Personagem viajante */
+  .traveler{
+    position:absolute;
+    bottom:150px;
+    left:22px;
+    font-size:1.9rem;
+    transition:left 2.4s cubic-bezier(.4,0,.2,1), bottom 2.4s ease;
+    filter:drop-shadow(0 3px 4px rgba(0,0,0,0.2));
+    z-index:5;
+  }
+
+  /* Coração no destino */
+  .heart{
+    position:absolute;
+    bottom:158px;
+    right:20px;
+    font-size:4.6rem;
+    color:var(--rose-deep);
+    filter:drop-shadow(0 4px 6px rgba(230,57,70,0.35));
+    transition:transform 0.3s;
+  }
+  .heart.pulse{ animation:heartbeat 1.1s infinite; }
+  @keyframes heartbeat{
+    0%{transform:scale(1);} 15%{transform:scale(1.25);} 30%{transform:scale(1);}
+    45%{transform:scale(1.15);} 60%{transform:scale(1);}
+  }
+
+  /* Trilho da ponte e encaixes (slots) */
+  .bridge-track{
+    position:absolute;
+    bottom:150px;
+    left:78px; right:78px;
+    height:14px;
+    display:flex;
+    gap:4px;
+    padding:0 2px;
+  }
+
+  .bridge-slot{
+    flex:1;
+    height:14px;
+    border-radius:3px;
+    border:1.5px dashed rgba(74,44,61,0.25);
+    position:relative;
+  }
+  .bridge-slot::after{
+    content:'';
+    position:absolute; left:0; right:0; bottom:-8px; height:8px;
+    opacity:0;
+  }
+  .bridge-slot.placed{
+    border:1px solid rgba(255,255,255,0.7);
+    box-shadow:0 3px 6px rgba(0,0,0,0.18);
+    animation:plankPop 0.35s ease-out;
+  }
+  .bridge-slot.placed::after{
+    opacity:1;
+    background:linear-gradient(rgba(74,44,61,0.12), transparent);
+  }
+  @keyframes plankPop{
+    0%{ transform:scaleY(0.3) translateY(6px); opacity:0.4; }
+    60%{ transform:scaleY(1.15) translateY(-2px); opacity:1;}
+    100%{ transform:scaleY(1) translateY(0); }
+  }
+
+  /* Elemento temporário para a animação da prancha voando */
+  .flying-plank{
+    position:fixed;
+    z-index:999;
+    border-radius:6px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.25);
+    pointer-events:none;
+  }
+
+  /* Barra de progresso em bolinhas */
+  .progress-row{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    margin-top:18px;
+  }
+  .progress-dot{
+    width:10px; height:10px; border-radius:50%;
+    background:#f0d9d9;
+    transition:background 0.3s, transform 0.3s;
+  }
+  .progress-dot.done{ background:var(--rose-deep); transform:scale(1.2); }
+
+  /* ---------- CAIXA DE MENSAGEM FINAL ---------- */
+  .message-box{
+    margin-top:26px;
+    padding:26px 30px;
+    background:#fff;
+    border:1px solid #f0d9d9;
+    border-radius:18px;
+    text-align:center;
+    max-width:460px;
+    display:none;
+    box-shadow:0 16px 36px var(--shadow);
+  }
+  .message-box.show{ display:block; animation:fadeUp 0.8s ease; }
+  @keyframes fadeUp{ from{opacity:0; transform:translateY(16px);} to{opacity:1; transform:translateY(0);} }
+
+  .message-title{
+    font-family:'Cormorant Garamond', serif;
+    font-style:italic;
+    font-weight:600;
+    font-size:1.5rem;
+    color:var(--rose-deep);
+    margin-bottom:10px;
+  }
+  .message-body{ color:#6b4e56; line-height:1.6; font-size:0.98rem; }
+
+  .replay-btn{
+    margin-top:18px;
+    background:var(--rose-deep);
+    color:#fff;
+    border:none;
+    padding:11px 26px;
+    border-radius:999px;
+    font-weight:700;
+    font-size:0.85rem;
+    letter-spacing:0.02em;
+    cursor:pointer;
+    transition:transform 0.2s, box-shadow 0.2s;
+  }
+  .replay-btn:hover{ transform:translateY(-2px); box-shadow:0 8px 18px rgba(201,24,74,0.35); }
+
+  /* ---------- ANIMAÇÃO DE CONFETIS ---------- */
+  .confetti-heart{
+    position:fixed;
+    top:-30px;
+    font-size:1.2rem;
+    z-index:998;
+    pointer-events:none;
+    animation-name:fall;
+    animation-timing-function:linear;
+    animation-fill-mode:forwards;
+  }
+  @keyframes fall{
+    to{ transform:translateY(110vh) rotate(360deg); opacity:0.2; }
+  }
+
+  /* Responsividade para telas menores */
+  @media (max-width:640px){
+    .memory-game{ grid-template-columns:repeat(3,1fr); }
+    .card{ width:24vw; height:24vw; max-width:88px; max-height:88px; }
+    .bridge-panel{ width:100%; }
+  }
+
+  /* Acessibilidade para usuários que preferem menos movimento */
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- Cabeçalho e Títulos da Página -->
+  <p class="eyebrow">um convite, em forma de jogo</p>
+  <h1>Construa comigo a ponte até o meu coração</h1>
+  <p class="subtitle">Cada piso de cerâmica que você encontrar aqui se torna parte da construçao, até a ponte inteira te levar até onde eu já te espero.</p>
+
+  <!-- Indicadores do jogo (Contadores) -->
+  <div class="status-bar">
+    <div class="status-chip"><span class="dot">♥</span><span id="pairsCount">0/6</span><span class="label">pisos encontrados</span></div>
+    <div class="status-chip"><span id="movesCount">0</span><span class="label">tentativas</span></div>
+    <div class="status-chip"><span id="timeCount">00:00</span><span class="label">tempo</span></div>
+  </div>
+
+  <!-- Área principal contendo o jogo da memória e a visualização da ponte -->
+  <div class="container">
+    <!-- Painel Esquerdo: Jogo da Memória -->
+    <div class="panel">
+      <p class="panel-label">encontre os pares de piso xoxo</p>
+      <div class="memory-game" id="memoryGame"></div>
+    </div>
+
+    <!-- Painel Direito: Animação e Progresso da Ponte -->
+    <div class="panel bridge-panel">
+      <p class="panel-label">Ponte</p>
+      <div class="bridge-scene">
+        <div class="river-flow"></div>
+        <div class="cliff cliff-left"></div>
+        <div class="cliff cliff-right"></div>
+        <div class="traveler" id="traveler">🧍‍♀️</div>
+        <div class="bridge-track" id="bridgeTrack"></div>
+        <div class="heart" id="mainHeart">♥</div>
+      </div>
+      <div class="progress-row" id="progressRow"></div>
+    </div>
+  </div>
+
+  <!-- Cartão de Mensagem Final (exibido ao terminar) -->
+  <div class="message-box" id="messageBox">
+    <p class="message-title">Você chegou.</p>
+    <p class="message-body">Peça a peça, você construiu essa ponte com suas próprias mãos, e ela te trouxe direto para onde eu queria te ter: perto de mim. Seja muito bem-vinda ao meu coração xoxo.</p>
+    <button class="replay-btn" id="replayBtn">construir de novo</button>
+  </div>
+
+<script>
+(function(){
+  // Lista com as classes de estilo para cada tipo de textura/piso
+  const textures = ['texture-wood','texture-marble','texture-mosaic','texture-tile','texture-granite','texture-brick'];
+
+  // Mapeamento dos elementos DOM
+  const gameContainer = document.getElementById('memoryGame');
+  const bridgeTrack = document.getElementById('bridgeTrack');
+  const progressRow = document.getElementById('progressRow');
+  const traveler = document.getElementById('traveler');
+  const mainHeart = document.getElementById('mainHeart');
+  const messageBox = document.getElementById('messageBox');
+  const pairsCountEl = document.getElementById('pairsCount');
+  const movesCountEl = document.getElementById('movesCount');
+  const timeCountEl = document.getElementById('timeCount');
+  const replayBtn = document.getElementById('replayBtn');
+
+  // Variáveis do estado do jogo
+  let bridgeSlots = [];
+  let hasFlippedCard=false, lockBoard=false, firstCard=null, secondCard=null;
+  let matchesFound=0, moves=0, seconds=0, timerId=null, started=false;
+
+  /**
+   * Constrói as lacunas da ponte e os pontos de progresso com base na quantidade de texturas.
+   */
+  function buildSlots(){
+    bridgeTrack.innerHTML = '';
+    progressRow.innerHTML = '';
+    bridgeSlots = [];
+    for(let i=0;i<textures.length;i++){
+      const slot = document.createElement('div');
+      slot.className = 'bridge-slot';
+      bridgeTrack.appendChild(slot);
+      bridgeSlots.push(slot);
+
+      const dot = document.createElement('div');
+      dot.className = 'progress-dot';
+      progressRow.appendChild(dot);
+    }
+  }
+
+  /**
+   * Toca um tom de áudio simples usando Web Audio API.
+   * @param {number} freq - Frequência do som em Hz.
+   * @param {number} duration - Duração em segundos.
+   */
+  function playTone(freq, duration){
+    try{
+      const ctx = playTone.ctx || (playTone.ctx = new (window.AudioContext||window.webkitAudioContext)());
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.06, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + duration);
+    }catch(e){ /* Ignora o erro se o áudio não for suportado/permitido */ }
+  }
+
+  /**
+   * Inicia o cronômetro do jogo.
+   */
+  function startTimer(){
+    if(started) return;
+    started = true;
+    timerId = setInterval(()=>{
+      seconds++;
+      const m = String(Math.floor(seconds/60)).padStart(2,'0');
+      const s = String(seconds%60).padStart(2,'0');
+      timeCountEl.textContent = m + ':' + s;
+    },1000);
+  }
+
+  /**
+   * Para o cronômetro do jogo.
+   */
+  function stopTimer(){ clearInterval(timerId); }
+
+  /**
+   * Cria o tabuleiro de cartas, embaralha e insere no DOM.
+   */
+  function createBoard(){
+    gameContainer.innerHTML = '';
+    let cardsData = [...textures, ...textures];
+    cardsData.sort(()=>0.5-Math.random()); // Embaralha as cartas
+
+    cardsData.forEach(texture=>{
+      const card = document.createElement('div');
+      card.classList.add('card');
+      card.dataset.texture = texture;
+      card.tabIndex = 0;
+      card.setAttribute('role','button');
+      card.setAttribute('aria-label','carta virada para baixo');
+      card.innerHTML = `<div class="front ${texture}"></div><div class="back"></div>`;
+      
+      // Eventos de clique e acessibilidade via teclado
+      card.addEventListener('click', ()=>flipCard(card));
+      card.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); flipCard(card);} });
+      gameContainer.appendChild(card);
+    });
+  }
+
+  /**
+   * Lógica para virar uma carta selecionada.
+   * @param {HTMLElement} card - Elemento da carta virada.
+   */
+  function flipCard(card){
+    if(lockBoard || card===firstCard || card.classList.contains('matched')) return;
+    startTimer();
+    card.classList.add('flip');
+
+    if(!hasFlippedCard){
+      hasFlippedCard = true;
+      firstCard = card;
+      return;
+    }
+    secondCard = card;
+    moves++;
+    movesCountEl.textContent = moves;
+    checkForMatch();
+  }
+
+  /**
+   * Verifica se as duas cartas viradas formam um par.
+   */
+  function checkForMatch(){
+    const isMatch = firstCard.dataset.texture === secondCard.dataset.texture;
+    isMatch ? handleMatch() : handleMismatch();
+  }
+
+  /**
+   * Trata a combinação correta de cartas.
+   */
+  function handleMatch(){
+    playTone(880, 0.18);
+    firstCard.classList.add('matched');
+    secondCard.classList.add('matched');
+    const texture = firstCard.dataset.texture;
+    sendPlanksToBridge(firstCard, secondCard, texture);
+    resetBoard();
+  }
+
+  /**
+   * Trata a escolha de cartas diferentes (erro).
+   */
+  function handleMismatch(){
+    lockBoard = true;
+    firstCard.classList.add('hint');
+    secondCard.classList.add('hint');
+    setTimeout(()=>{
+      firstCard.classList.remove('flip','hint');
+      secondCard.classList.remove('flip','hint');
+      resetBoard();
+    },850);
+  }
+
+  /**
+   * Reseta o estado temporário do tabuleiro para a próxima jogada.
+   */
+  function resetBoard(){
+    [hasFlippedCard, lockBoard] = [false, false];
+    [firstCard, secondCard] = [null, null];
+  }
+
+  /**
+   * Controla o envio das peças da carta em direção à ponte.
+   */
+  function sendPlanksToBridge(cardA, cardB, texture){
+    if(matchesFound >= bridgeSlots.length) return;
+    const slotIndex = matchesFound;
+    matchesFound++;
+    flyPlank(cardA, slotIndex, texture, 0);
+    flyPlank(cardB, slotIndex, texture, 90);
+    progressRow.children[slotIndex].classList.add('done');
+    pairsCountEl.textContent = matchesFound + '/' + textures.length;
+
+    // Se encontrou todos os pares, finaliza a ponte
+    if(matchesFound === bridgeSlots.length){
+      stopTimer();
+      setTimeout(finishBridge, 900);
+    }
+  }
+
+  /**
+   * Cria a animação da prancha voando da carta até a posição na ponte.
+   */
+  function flyPlank(cardEl, slotIndex, texture, spinOffset){
+    const slot = bridgeSlots[slotIndex];
+    const startRect = cardEl.getBoundingClientRect();
+    const endRect = slot.getBoundingClientRect();
+
+    const flying = document.createElement('div');
+    flying.className = 'flying-plank ' + texture;
+    document.body.appendChild(flying);
+    flying.style.left = startRect.left + 'px';
+    flying.style.top = startRect.top + 'px';
+    flying.style.width = startRect.width + 'px';
+    flying.style.height = startRect.height + 'px';
+    flying.style.transform = 'rotate(' + spinOffset + 'deg)';
+
+    // Animação de transição até a lacuna da ponte
+    requestAnimationFrame(()=>{
+      flying.style.transition = 'left 0.75s cubic-bezier(.3,.7,.2,1), top 0.75s cubic-bezier(.3,.7,.2,1), width 0.75s ease, height 0.75s ease, transform 0.75s ease, opacity 0.75s ease';
+      flying.style.left = endRect.left + 'px';
+      flying.style.top = endRect.top + 'px';
+      flying.style.width = endRect.width + 'px';
+      flying.style.height = endRect.height + 'px';
+      flying.style.transform = 'rotate(' + (360+spinOffset) + 'deg)';
+    });
+
+    // Encaixa a peça na ponte
+    setTimeout(()=>{
+      flying.style.opacity = '0';
+      slot.classList.add('placed', texture);
+    }, 620);
+
+    // Remove o elemento temporário da animação
+    setTimeout(()=> flying.remove(), 780);
+  }
+
+  /**
+   * Executa a sequência de vitória: sons, movimentação do personagem, confetis e mensagem.
+   */
+  function finishBridge(){
+    playTone(660,0.15);
+    setTimeout(()=>playTone(880,0.15),150);
+    setTimeout(()=>playTone(1108,0.3),300);
+
+    mainHeart.classList.add('pulse');
+
+    // Move o personagem até o outro lado da ponte
+    const travelerLeftEnd = bridgeTrack.getBoundingClientRect().right - traveler.getBoundingClientRect().width - 30;
+    const sceneLeft = document.querySelector('.bridge-scene').getBoundingClientRect().left;
+    traveler.style.left = (travelerLeftEnd - sceneLeft) + 'px';
+
+    launchConfetti();
+    setTimeout(()=>{ messageBox.classList.add('show'); }, 1400);
+  }
+
+  /**
+   * Cria a animação de chuva de confetis em formato de coração.
+   */
+  function launchConfetti(){
+    const symbols = ['♥','❤','💕'];
+    const colors = ['#c9184a','#d1495b','#e7b2b6','#c9a15c'];
+    for(let i=0;i<28;i++){
+      const el = document.createElement('div');
+      el.className = 'confetti-heart';
+      el.textContent = symbols[Math.floor(Math.random()*symbols.length)];
+      el.style.left = Math.random()*100 + 'vw';
+      el.style.color = colors[Math.floor(Math.random()*colors.length)];
+      el.style.animationDuration = (3 + Math.random()*2.5) + 's';
+      el.style.fontSize = (0.9 + Math.random()*1.1) + 'rem';
+      document.body.appendChild(el);
+      setTimeout(()=>el.remove(), 6000);
+    }
+  }
+
+  /**
+   * Reinicia todo o jogo ao seu estado inicial.
+   */
+  function resetGame(){
+    stopTimer();
+    matchesFound=0; moves=0; seconds=0; started=false;
+    hasFlippedCard=false; lockBoard=false; firstCard=null; secondCard=null;
+    movesCountEl.textContent='0';
+    timeCountEl.textContent='00:00';
+    pairsCountEl.textContent='0/'+textures.length;
+    mainHeart.classList.remove('pulse');
+    messageBox.classList.remove('show');
+    traveler.style.left = '22px';
+    buildSlots();
+    createBoard();
+  }
+
+  // Evento do botão de reiniciar
+  replayBtn.addEventListener('click', resetGame);
+
+  // Inicialização do jogo na primeira carga
+  buildSlots();
+  createBoard();
+})();
+</script>
+</body>
+</html>
